@@ -1,4 +1,4 @@
-# 🚀 OpenCode Multi-Agent Studio
+# 🚀 OpenCode Multi-Agent Workflow
 
 Welcome to your autonomous AI development team. Instead of relying on a single AI to do everything, this setup provides you with a team of specialized agents. Each agent has a specific job—from brainstorming ideas to writing code and running tests. 
 
