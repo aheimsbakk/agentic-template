@@ -31,4 +31,4 @@ Evaluate the EXACT content of the VERY LAST message and follow this routing tabl
 
 **[STATE 5: DONE]**
 - IF Last Message: QA returns "STATUS: PASS".
-- ACTION: Stop tool execution. You MUST start your response to the calling agent with "**[PM REPORT: TASK SUCCESS]**". Then, provide a brutally short summary (max 3 bullets) of what was achieved, forward QA's final response, and list the updated files.
+- ACTION: Stop tool execution. You MUST start your response to the calling agent with "**[PM REPORT: TASK SUCCESS]**". Then, provide a brutally SHORT SUMMARY (NAX 3 bullets) of what was achieved, and list the updated files.
