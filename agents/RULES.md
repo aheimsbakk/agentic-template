@@ -20,7 +20,8 @@
 11. **Workspace Hygiene & Gitignore:** The repository MUST remain clean. All temporary AI-generated workflow files (e.g., `.qa-error.log`), build artifacts, dependency caches, and environment files MUST be explicitly declared in `.gitignore`. The agent generating the files (typically the Builder) is strictly responsible for updating `.gitignore` before task completion.
 12. **Backward Compatibility:** Do not break existing callers; use fallbacks for changed signatures. Flag major component replacements with `@deprecated` instead of instant deletion.
 13. **Dependencies:** Use explicit, stable package versions (no `latest` or wildcards). Always sync manifests and lockfiles. Prefer native code over adding small, unnecessary dependencies.
+14. **Automation & Scripting:** If you create a new utility script (e.g., in the `scripts/` directory), you MUST use the `bash` tool to make it executable (`chmod +x <path>`). Immediately document its exact purpose, required arguments, and usage examples in `README.md`.
 
 ## V. Documentation & Formatting
-14. **Strict Templating:** Strictly adhere to required formats (e.g., YAML front-matter in worklogs). Do not invent new fields, change key casing, or exceed length limits.
-15. **Synchronized Docs:** Code and docs must match. Immediately update inline comments, `README.md`, developer guides, and `.env.example` when changing logic or adding variables.
+15. **Strict Templating:** Strictly adhere to required formats (e.g., YAML front-matter in worklogs). Do not invent new fields, change key casing, or exceed length limits.
+16. **Synchronized Docs:** Code and docs must match. Immediately update inline comments, `README.md`, developer guides, and `.env.example` when changing logic or adding variables.
