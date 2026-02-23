@@ -92,7 +92,7 @@ Use this workflow when you want to quickly debug an issue or write code collabor
 ---
 
 ## 📂 Important Files to Know
-The agents rely on a few critical markdown files to stay synchronized. The Architect will update these automatically, but you should know they exist:
+The agents rely on a few critical markdown files to stay synchronized. The Architect will update `BLUEPRINT.md`, `CONTEXT.md` and `docs/PROJECT_RULES.md` automatically, but you should know they exist:
 
 * `AGENTS.md`: The master rulebook for how the agents behave and commit code.
 * `BLUEPRINT.md`: The high-level map of your system's architecture and data models.
