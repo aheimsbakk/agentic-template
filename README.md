@@ -85,7 +85,7 @@ Use this workflow when you want a feature built from start to finish with proper
 ### Workflow B: Vibe Mode (Recommended for quick fixes)
 Use this workflow when you want to quickly debug an issue or write code collaboratively without the heavy process.
 
-1. **Start:** Chat with `vibe`.
+1. **Start:** Chat with **Vibe**.
 2. **Code:** Ask it to read logs, run tests, or write snippets directly.
 3. **Wrap up:** When you are satisfied, simply tell Vibe to "wrap up", and it will automatically document the changes and commit your code.
 
