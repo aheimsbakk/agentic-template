@@ -6,6 +6,26 @@ This template is designed to keep your project organized, your architecture clea
 
 ---
 
+## ⬇️ Quick Install
+
+Install the agentic template scripts and helpers. From the root of your project you can fetch and run the installer directly from the template repository with:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/aheimsbakk/agentic-template/main/agents/update-agents.sh | bash
+```
+
+To update the local scripts later (run this from the root of your repo):
+
+```bash
+./agents/update-agents.sh
+```
+
+Security tip: review the downloaded script before piping to bash. To download without executing first:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/aheimsbakk/agentic-template/main/agents/update-agents.sh | less
+```
+
 ## 👥 Meet the Team
 
 You have two primary ways to interact with the system, depending on what you need:
