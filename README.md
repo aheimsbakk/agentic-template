@@ -4,8 +4,6 @@ Welcome to your autonomous AI development team. Instead of relying on a single A
 
 This template is designed to keep your project organized, your architecture clean, and your codebase bug-free.
 
----
-
 ## ⬇️ Quick Install
 
 Install the agentic template scripts and helpers. From the root of your project you can fetch and run the installer directly from the template repository with:
