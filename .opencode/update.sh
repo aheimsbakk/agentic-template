@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# update-agents.sh - Download/update agentic template files from GitHub
+# update.sh - Download/update agentic template files from GitHub
 #
 # Downloads AGENTS.md, opencode.json, and all files under .opencode/ (and
 # the legacy agents/ path) from https://github.com/aheimsbakk/agentic-template
@@ -12,7 +12,7 @@ set -euo pipefail
 readonly REPO="aheimsbakk/agentic-template"
 readonly GITHUB_RAW="https://raw.githubusercontent.com/${REPO}"
 readonly GITHUB_API="https://api.github.com/repos/${REPO}"
-readonly VERSION="1.2.0"
+readonly VERSION="1.3.0"
 readonly SCRIPT_NAME="$(basename "$0")"
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -32,12 +32,14 @@ Arguments:
   BRANCH/TAG    Branch or tag to download from (default: main)
 
 Options:
+  -D            Delete the legacy ./agents folder before updating
   -d DIR        Target directory (default: current directory)
   -h, --help    Show this help message and exit
   -v, --version Show version and exit
 
 Examples:
   ${SCRIPT_NAME}                     # Download from main into current dir
+  ${SCRIPT_NAME} -D                  # Delete ./agents folder, then download
   ${SCRIPT_NAME} develop             # Download from the 'develop' branch
   ${SCRIPT_NAME} v1.2.0              # Download from the 'v1.2.0' tag
   ${SCRIPT_NAME} -d ~/myproject      # Download into ~/myproject
@@ -118,6 +120,11 @@ download_file() {
 	else
 		cp "$tmp" "$dest"
 		echo "  UPDATED ${remote_path}"
+		# If this is the update script itself, make it executable
+		if [[ "$remote_path" == ".opencode/update.sh" ]]; then
+			chmod +x "$dest"
+			echo "  CHMOD  ${remote_path} (set executable)"
+		fi
 	fi
 }
 
@@ -125,6 +132,7 @@ download_file() {
 
 TARGET_DIR="."
 REF="main"
+DELETE_AGENTS_DIR=0
 
 while [[ $# -gt 0 ]]; do
 	case "$1" in
@@ -135,6 +143,10 @@ while [[ $# -gt 0 ]]; do
 	-v | --version)
 		version
 		exit 0
+		;;
+	-D)
+		DELETE_AGENTS_DIR=1
+		shift
 		;;
 	-d)
 		[[ $# -gt 1 ]] || die "option -d requires an argument"
@@ -164,6 +176,16 @@ TARGET_DIR="$(realpath -m "$TARGET_DIR")"
 
 if [[ ! -d "$TARGET_DIR" ]]; then
 	die "target directory does not exist: ${TARGET_DIR}"
+fi
+
+# Delete legacy ./agents folder if requested
+if [[ "$DELETE_AGENTS_DIR" == "1" ]]; then
+	if [[ -d "${TARGET_DIR}/agents" ]]; then
+		rm -rf "${TARGET_DIR}/agents"
+		echo "  DELETED ./agents (legacy folder removed)"
+	else
+		echo "  SKIP   ./agents (not found, nothing to delete)"
+	fi
 fi
 
 echo "Repository : ${REPO}"

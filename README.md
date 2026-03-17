@@ -9,19 +9,19 @@ This template is designed to keep your project organized, your architecture clea
 Install the agentic template scripts and helpers. From the root of your project you can fetch and run the installer directly from the template repository with:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/aheimsbakk/agentic-template/main/.opencode/update-agents.sh | bash
+curl -fsSL https://raw.githubusercontent.com/aheimsbakk/agentic-template/main/.opencode/update.sh | bash
 ```
 
 To update the local scripts later (run this from the root of your repo):
 
 ```bash
-./.opencode/update-agents.sh
+./.opencode/update.sh
 ```
 
 Security tip: review the downloaded script before piping to bash. To download without executing first:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/aheimsbakk/agentic-template/main/.opencode/update-agents.sh | less
+curl -fsSL https://raw.githubusercontent.com/aheimsbakk/agentic-template/main/.opencode/update.sh | less
 ```
 
 ## 👥 Meet the Team
