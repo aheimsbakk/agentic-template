@@ -9,19 +9,19 @@ This template is designed to keep your project organized, your architecture clea
 Install the agentic template scripts and helpers. From the root of your project you can fetch and run the installer directly from the template repository with:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/aheimsbakk/agentic-template/main/agents/update-agents.sh | bash
+curl -fsSL https://raw.githubusercontent.com/aheimsbakk/agentic-template/main/.opencode/update-agents.sh | bash
 ```
 
 To update the local scripts later (run this from the root of your repo):
 
 ```bash
-./agents/update-agents.sh
+./.opencode/update-agents.sh
 ```
 
 Security tip: review the downloaded script before piping to bash. To download without executing first:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/aheimsbakk/agentic-template/main/agents/update-agents.sh | less
+curl -fsSL https://raw.githubusercontent.com/aheimsbakk/agentic-template/main/.opencode/update-agents.sh | less
 ```
 
 ## 👥 Meet the Team
@@ -115,7 +115,7 @@ The agents rely on a few critical markdown files to stay synchronized. The Archi
 * `AGENTS.md`: The master rulebook for how the agents behave and commit code.
 * `BLUEPRINT.md`: The high-level map of your system's architecture and data models.
 * `CONTEXT.md`: A short summary of the project's current state.
-* `agents/RULES.md`: Absolute, unbreakable rules for the project.
+* `.opencode/RULES.md`: Absolute, unbreakable rules for the project.
 * `docs/PROJECT_RULES.md`: Dynamic coding conventions deduced by the Architect. 
 
 Enjoy building with your new autonomous team!
