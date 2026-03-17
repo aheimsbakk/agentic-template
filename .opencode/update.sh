@@ -196,6 +196,7 @@ echo ""
 # Static top-level files
 STATIC_FILES=(
 	"AGENTS.md"
+	"opencode.json"
 )
 
 # Dynamic: discover all files under .opencode/ (also accepts legacy agents/)
