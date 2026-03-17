@@ -12,7 +12,7 @@ set -euo pipefail
 readonly REPO="aheimsbakk/agentic-template"
 readonly GITHUB_RAW="https://raw.githubusercontent.com/${REPO}"
 readonly GITHUB_API="https://api.github.com/repos/${REPO}"
-readonly VERSION="1.1.0"
+readonly VERSION="1.2.0"
 readonly SCRIPT_NAME="$(basename "$0")"
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -181,132 +181,182 @@ mapfile -t AGENT_FILES < <(get_agent_files "$REF")
 
 ALL_FILES=("${STATIC_FILES[@]}" "${AGENT_FILES[@]}")
 
-# If .opencode/.gitignore exists in the target dir, parse ignore patterns
+# ─── Parse .opencode/.gitignore ───────────────────────────────────────────────
+# Build two parallel arrays:
+#   IGNORE_PATTERNS  – all normalized pattern strings
+#   IGNORE_IS_DIR    – "1" if the pattern refers to a directory, "0" otherwise
+#
+# Directory detection (no trailing slash required):
+#   1. Check local filesystem first – if a matching path is a directory, treat as dir.
+#   2. Fall back to remote file list – if any remote path has the pattern as a
+#      prefix component, treat as dir.
+
 IGNORE_PATTERNS=()
-IGNORE_DIRS=()
+IGNORE_IS_DIR=()
 GITIGNORE_FILE="${TARGET_DIR}/.opencode/.gitignore"
+
 if [[ -f "$GITIGNORE_FILE" ]]; then
 	while IFS= read -r line || [[ -n "$line" ]]; do
-		# Strip comments and surrounding whitespace
+		# Strip inline comments and surrounding whitespace
 		line="${line%%#*}"
-		line="$(echo "$line" | sed -e 's/^\s*//' -e 's/\s*$//')"
+		line="${line#"${line%%[![:space:]]*}"}" # ltrim
+		line="${line%"${line##*[![:space:]]}"}" # rtrim
 		[[ -z "$line" ]] && continue
 
-		# Normalize: remove leading ./ or leading / (we work relative to .opencode)
-		norm="$line"
-		norm="${norm#./}"
+		# Normalize: remove leading ./ or leading /
+		norm="${line#./}"
 		norm="${norm#/}"
+		# Strip any trailing slash (we detect dirs ourselves)
+		norm="${norm%/}"
+
+		# Determine if this pattern is a directory:
+		# 1. Local filesystem check (most reliable for locally-added files)
+		is_dir=0
+		if [[ -d "${TARGET_DIR}/.opencode/${norm}" ]]; then
+			is_dir=1
+		else
+			# 2. Remote file list check (catches dirs that exist only remotely)
+			for rf in "${AGENT_FILES[@]}"; do
+				if [[ "$rf" == ".opencode/${norm}/"* ]]; then
+					is_dir=1
+					break
+				fi
+			done
+		fi
 
 		IGNORE_PATTERNS+=("$norm")
-
-		# Determine if this pattern should be treated as a directory ignore.
-		# If pattern ends with a slash it's a dir; otherwise if the path exists
-		# locally under .opencode and is a directory treat it as a dir too.
-		if [[ "$norm" == */ ]]; then
-			d="${norm%/}"
-			IGNORE_DIRS+=("$d")
-		else
-			# If the exact path exists locally and is a directory, mark as dir
-			if [[ -d "${TARGET_DIR}/.opencode/${norm}" ]]; then
-				IGNORE_DIRS+=("$norm")
-			fi
-		fi
+		IGNORE_IS_DIR+=("$is_dir")
 	done <"$GITIGNORE_FILE"
 fi
 
-# Helper: return 0 if a path (remote-style, e.g. .opencode/foo) matches any ignore pattern
-matches_ignore() {
-	local path="$1" # e.g. .opencode/foo/bar
-	[[ ${#IGNORE_PATTERNS[@]} -eq 0 ]] && return 1
+# ─── Ignore helpers ───────────────────────────────────────────────────────────
 
-	local p norm
-	for p in "${IGNORE_PATTERNS[@]}"; do
-		norm="$p"
-		# If pattern contains wildcards, match using shell pattern against the path
+# Return 0 if the given relative path (e.g. ".opencode/foo/bar") is covered by
+# any ignore pattern.  Handles exact file matches, directory-prefix matches,
+# and simple glob wildcards.
+path_is_ignored() {
+	local path="$1" # relative to TARGET_DIR, e.g. ".opencode/node_modules/x"
+	local i norm is_dir
+
+	for i in "${!IGNORE_PATTERNS[@]}"; do
+		norm="${IGNORE_PATTERNS[$i]}"
+		is_dir="${IGNORE_IS_DIR[$i]}"
+
 		if [[ "$norm" == *"*"* || "$norm" == *"?"* || "$norm" == *"["* ]]; then
-			# prefix with .opencode/ if pattern is not anchored
-			if [[ "$norm" != /* ]]; then
-				if [[ "$path" == .opencode/${norm} || "$path" == .opencode/${norm}* ]]; then
-					return 0
-				fi
-			else
-				if [[ "$path" == $norm ]]; then
-					return 0
-				fi
-			fi
-			continue
-		fi
-
-		# Exact file match
-		if [[ "$path" == ".opencode/${norm}" ]]; then
-			return 0
-		fi
-		# If this pattern is known to be a directory ignore, match prefix
-		for d in "${IGNORE_DIRS[@]}"; do
-			if [[ "$path" == .opencode/${d}* ]]; then
+			# Glob pattern: match against the full path
+			# shellcheck disable=SC2254
+			case "$path" in
+			.opencode/${norm} | .opencode/${norm}/*) return 0 ;;
+			esac
+		elif [[ "$is_dir" == "1" ]]; then
+			# Directory pattern: match path itself or anything inside it
+			if [[ "$path" == ".opencode/${norm}" || "$path" == ".opencode/${norm}/"* ]]; then
 				return 0
 			fi
-		done
+		else
+			# Plain file pattern: exact match only
+			if [[ "$path" == ".opencode/${norm}" ]]; then
+				return 0
+			fi
+		fi
 	done
 	return 1
 }
 
+# Return 0 if the given *directory* (absolute path) is itself directly ignored
+# (i.e. we should not traverse it at all).
+dir_is_ignored() {
+	local abs_dir="$1"
+	local rel="${abs_dir#"${TARGET_DIR}/"}"
+	path_is_ignored "$rel"
+}
+
+# ─── Download phase ───────────────────────────────────────────────────────────
+
 fail_count=0
 for file in "${ALL_FILES[@]}"; do
-	# If file is under .opencode and matches ignore patterns, skip downloading
-	if [[ "$file" == .opencode/* ]] && matches_ignore "$file"; then
+	if [[ "$file" == .opencode/* ]] && path_is_ignored "$file"; then
 		echo "  SKIP   ${file} (ignored by .opencode/.gitignore)"
 		continue
 	fi
 	download_file "$REF" "$file" "$TARGET_DIR" || ((fail_count++)) || true
 done
 
-# Remove local files that no longer exist in the remote
-# Build a lookup set of all remote paths
+# ─── Cleanup phase ────────────────────────────────────────────────────────────
+# Remove local files that no longer exist in the remote.
+# Ignored directories are not traversed; instead they are reported as KEEP.
+
+# Build a lookup set of all remote paths for O(1) membership tests
 declare -A remote_set
 for file in "${ALL_FILES[@]}"; do
 	remote_set["$file"]=1
 done
 
-# Walk managed locations: top-level static files + the .opencode/ (or agents/) subtree
-while IFS= read -r -d '' local_file; do
-	rel="${local_file#"${TARGET_DIR}/"}"
-	if [[ -z "${remote_set[$rel]+_}" ]]; then
-		# If under .opencode and matches ignore patterns, do not remove
-		if [[ "$rel" == .opencode/* ]] && matches_ignore "$rel"; then
-			echo "  KEEP    ${rel} (ignored by .opencode/.gitignore)"
-			continue
-		fi
-		rm -f "$local_file"
-		echo "  DELETED ${rel}"
-		# Remove empty parent directories inside agents/
-		rmdir --ignore-fail-on-non-empty -p "$(dirname "$local_file")" 2>/dev/null || true
-	fi
-done < <(
-	# Enumerate local candidates: static files + everything under agents/
-	for f in "${STATIC_FILES[@]}"; do
-		[[ -f "${TARGET_DIR}/${f}" ]] && printf '%s\0' "${TARGET_DIR}/${f}"
+# Enumerate local candidates and decide what to do with each.
+# We walk .opencode/ (or legacy agents/) manually so we can skip ignored dirs
+# at the directory level and emit KEEP for them without descending.
+process_local_tree() {
+	local base_dir="$1" # absolute path to .opencode or agents/
+
+	# Use a queue implemented with a bash array to avoid subshell issues
+	local -a queue=("$base_dir")
+
+	while [[ ${#queue[@]} -gt 0 ]]; do
+		local dir="${queue[0]}"
+		queue=("${queue[@]:1}")
+
+		local entry rel
+
+		# Process all subdirectories (both plain and hidden/dot dirs)
+		for entry in "$dir"/*/ "$dir"/.*/; do
+			# Glob may not match anything; skip . and ..
+			[[ -e "$entry" ]] || continue
+			entry="${entry%/}" # remove trailing slash added by glob
+			[[ "$entry" == */. || "$entry" == */.. ]] && continue
+
+			rel="${entry#"${TARGET_DIR}/"}"
+
+			if dir_is_ignored "$entry"; then
+				echo "  KEEP   ${rel}/ (ignored by .opencode/.gitignore)"
+				# Do not traverse further
+			else
+				queue+=("$entry")
+			fi
+		done
+
+		# Process all files (both plain and hidden/dot files)
+		for entry in "$dir"/* "$dir"/.*; do
+			[[ -e "$entry" ]] || continue
+			[[ -f "$entry" ]] || continue # skip dirs (handled above)
+
+			rel="${entry#"${TARGET_DIR}/"}"
+
+			if path_is_ignored "$rel"; then
+				echo "  KEEP   ${rel} (ignored by .opencode/.gitignore)"
+			elif [[ -z "${remote_set[$rel]+_}" ]]; then
+				rm -f "$entry"
+				echo "  DELETED ${rel}"
+				rmdir --ignore-fail-on-non-empty -p "$(dirname "$entry")" 2>/dev/null || true
+			fi
+		done
 	done
-	# prefer .opencode directory, fall back to legacy agents/
-	if [[ -d "${TARGET_DIR}/.opencode" ]]; then
-		# Build find expression that prunes ignored directories so we don't traverse them
-		if [[ ${#IGNORE_DIRS[@]} -gt 0 ]]; then
-			# Construct -path ... -prune -o clauses
-			expr=()
-			for d in "${IGNORE_DIRS[@]}"; do
-				# escape for find: prefix path
-				expr+=(-path "${TARGET_DIR}/.opencode/${d}" -prune -o)
-			done
-			# final action: print files
-			# shellcheck disable=SC2086
-			find "${TARGET_DIR}/.opencode" ${expr[@]} -type f -print0
-		else
-			find "${TARGET_DIR}/.opencode" -type f -print0
-		fi
-	elif [[ -d "${TARGET_DIR}/agents" ]]; then
-		find "${TARGET_DIR}/agents" -type f -print0
+}
+
+# Handle static top-level files
+for f in "${STATIC_FILES[@]}"; do
+	[[ -f "${TARGET_DIR}/${f}" ]] || continue
+	if [[ -z "${remote_set[$f]+_}" ]]; then
+		rm -f "${TARGET_DIR}/${f}"
+		echo "  DELETED ${f}"
 	fi
-)
+done
+
+# Walk managed directory tree
+if [[ -d "${TARGET_DIR}/.opencode" ]]; then
+	process_local_tree "${TARGET_DIR}/.opencode"
+elif [[ -d "${TARGET_DIR}/agents" ]]; then
+	process_local_tree "${TARGET_DIR}/agents"
+fi
 
 echo ""
 if [[ $fail_count -gt 0 ]]; then
