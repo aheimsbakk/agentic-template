@@ -26,7 +26,6 @@ directory or a specified target directory.
 
     Files downloaded:
   AGENTS.md
-  opencode.json
   .opencode/  (all files, recursively)  # previously 'agents/'
 
 Arguments:
@@ -40,7 +39,7 @@ Options:
 Examples:
   ${SCRIPT_NAME}                     # Download from main into current dir
   ${SCRIPT_NAME} develop             # Download from the 'develop' branch
-  ${SCRIPT_NAME} v1.2.0             # Download from the 'v1.2.0' tag
+  ${SCRIPT_NAME} v1.2.0              # Download from the 'v1.2.0' tag
   ${SCRIPT_NAME} -d ~/myproject      # Download into ~/myproject
   ${SCRIPT_NAME} -d ~/myproject main # Download from main into ~/myproject
 EOF
@@ -175,7 +174,6 @@ echo ""
 # Static top-level files
 STATIC_FILES=(
 	"AGENTS.md"
-	"opencode.json"
 )
 
 # Dynamic: discover all files under .opencode/ (also accepts legacy agents/)
@@ -183,8 +181,53 @@ mapfile -t AGENT_FILES < <(get_agent_files "$REF")
 
 ALL_FILES=("${STATIC_FILES[@]}" "${AGENT_FILES[@]}")
 
+# If .opencode/.gitignore exists in the target dir, parse ignore patterns
+IGNORE_PATTERNS=()
+GITIGNORE_FILE="${TARGET_DIR}/.opencode/.gitignore"
+if [[ -f "$GITIGNORE_FILE" ]]; then
+	while IFS= read -r line || [[ -n "$line" ]]; do
+		# Strip comments and surrounding whitespace
+		line="${line%%#*}"
+		line="$(echo "$line" | sed -e 's/^\s*//' -e 's/\s*$//')"
+		[[ -z "$line" ]] && continue
+		IGNORE_PATTERNS+=("$line")
+	done <"$GITIGNORE_FILE"
+fi
+
+# Helper: return 0 if a path (remote-style, e.g. .opencode/foo) matches any ignore pattern
+matches_ignore() {
+	local path="$1"
+	[[ ${#IGNORE_PATTERNS[@]} -eq 0 ]] && return 1
+	local p pref glob
+	for p in "${IGNORE_PATTERNS[@]}"; do
+		# Normalize pattern: remove leading slash
+		pref="$p"
+		pref="${pref#/}"
+		# If pattern is a directory (ends with /), match any file under it
+		if [[ "$pref" == */ ]]; then
+			glob=".opencode/${pref}*"
+		else
+			glob=".opencode/${pref}"
+		fi
+		# Allow wildcard patterns in gitignore to be used directly
+		# If pattern contains a wildcard, use it as-is (with .opencode/ prefix if necessary)
+		if [[ "$pref" == *"*"* || "$pref" == *"?"* || "$pref" == *"["* ]]; then
+			glob=".opencode/${pref}"
+		fi
+		if [[ "$path" == $glob ]]; then
+			return 0
+		fi
+	done
+	return 1
+}
+
 fail_count=0
 for file in "${ALL_FILES[@]}"; do
+	# If file is under .opencode and matches ignore patterns, skip downloading
+	if [[ "$file" == .opencode/* ]] && matches_ignore "$file"; then
+		echo "  SKIP   ${file} (ignored by .opencode/.gitignore)"
+		continue
+	fi
 	download_file "$REF" "$file" "$TARGET_DIR" || ((fail_count++)) || true
 done
 
@@ -199,6 +242,11 @@ done
 while IFS= read -r -d '' local_file; do
 	rel="${local_file#"${TARGET_DIR}/"}"
 	if [[ -z "${remote_set[$rel]+_}" ]]; then
+		# If under .opencode and matches ignore patterns, do not remove
+		if [[ "$rel" == .opencode/* ]] && matches_ignore "$rel"; then
+			echo "  KEEP    ${rel} (ignored by .opencode/.gitignore)"
+			continue
+		fi
 		rm -f "$local_file"
 		echo "  DELETED ${rel}"
 		# Remove empty parent directories inside agents/
