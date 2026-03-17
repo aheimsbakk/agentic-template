@@ -200,22 +200,28 @@ matches_ignore() {
 	[[ ${#IGNORE_PATTERNS[@]} -eq 0 ]] && return 1
 	local p pref glob
 	for p in "${IGNORE_PATTERNS[@]}"; do
-		# Normalize pattern: remove leading slash
+		# Normalize pattern: remove leading slash and surrounding whitespace
 		pref="$p"
 		pref="${pref#/}"
-		# If pattern is a directory (ends with /), match any file under it
+		# If pattern is a directory (ends with /) match the directory and any files under it
 		if [[ "$pref" == */ ]]; then
-			glob=".opencode/${pref}*"
+			# remove trailing slash for pattern matching
+			dir_pref="${pref%/}"
+			if [[ "$path" == .opencode/${dir_pref} || "$path" == .opencode/${dir_pref}/* ]]; then
+				return 0
+			fi
 		else
-			glob=".opencode/${pref}"
-		fi
-		# Allow wildcard patterns in gitignore to be used directly
-		# If pattern contains a wildcard, use it as-is (with .opencode/ prefix if necessary)
-		if [[ "$pref" == *"*"* || "$pref" == *"?"* || "$pref" == *"["* ]]; then
-			glob=".opencode/${pref}"
-		fi
-		if [[ "$path" == $glob ]]; then
-			return 0
+			# For patterns without trailing slash, match the exact path or any files under it
+			# This mirrors gitignore semantics where a pattern matches files and directories
+			if [[ "$path" == .opencode/${pref} || "$path" == .opencode/${pref}/* ]]; then
+				return 0
+			fi
+			# Also support wildcard patterns from gitignore (e.g. *.py, sub*/file)
+			if [[ "$pref" == *"*"* || "$pref" == *"?"* || "$pref" == *"["* ]]; then
+				if [[ "$path" == .opencode/${pref} || "$path" == .opencode/${pref}/* ]]; then
+					return 0
+				fi
+			fi
 		fi
 	done
 	return 1
