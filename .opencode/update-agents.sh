@@ -183,6 +183,7 @@ ALL_FILES=("${STATIC_FILES[@]}" "${AGENT_FILES[@]}")
 
 # If .opencode/.gitignore exists in the target dir, parse ignore patterns
 IGNORE_PATTERNS=()
+IGNORE_DIRS=()
 GITIGNORE_FILE="${TARGET_DIR}/.opencode/.gitignore"
 if [[ -f "$GITIGNORE_FILE" ]]; then
 	while IFS= read -r line || [[ -n "$line" ]]; do
@@ -190,39 +191,62 @@ if [[ -f "$GITIGNORE_FILE" ]]; then
 		line="${line%%#*}"
 		line="$(echo "$line" | sed -e 's/^\s*//' -e 's/\s*$//')"
 		[[ -z "$line" ]] && continue
-		IGNORE_PATTERNS+=("$line")
+
+		# Normalize: remove leading ./ or leading / (we work relative to .opencode)
+		norm="$line"
+		norm="${norm#./}"
+		norm="${norm#/}"
+
+		IGNORE_PATTERNS+=("$norm")
+
+		# Determine if this pattern should be treated as a directory ignore.
+		# If pattern ends with a slash it's a dir; otherwise if the path exists
+		# locally under .opencode and is a directory treat it as a dir too.
+		if [[ "$norm" == */ ]]; then
+			d="${norm%/}"
+			IGNORE_DIRS+=("$d")
+		else
+			# If the exact path exists locally and is a directory, mark as dir
+			if [[ -d "${TARGET_DIR}/.opencode/${norm}" ]]; then
+				IGNORE_DIRS+=("$norm")
+			fi
+		fi
 	done <"$GITIGNORE_FILE"
 fi
 
 # Helper: return 0 if a path (remote-style, e.g. .opencode/foo) matches any ignore pattern
 matches_ignore() {
-	local path="$1"
+	local path="$1" # e.g. .opencode/foo/bar
 	[[ ${#IGNORE_PATTERNS[@]} -eq 0 ]] && return 1
-	local p pref glob
+
+	local p norm
 	for p in "${IGNORE_PATTERNS[@]}"; do
-		# Normalize pattern: remove leading slash and surrounding whitespace
-		pref="$p"
-		pref="${pref#/}"
-		# If pattern is a directory (ends with /) match the directory and any files under it
-		if [[ "$pref" == */ ]]; then
-			# remove trailing slash for pattern matching
-			dir_pref="${pref%/}"
-			if [[ "$path" == .opencode/${dir_pref} || "$path" == .opencode/${dir_pref}/* ]]; then
-				return 0
-			fi
-		else
-			# For patterns without trailing slash, match the exact path or any files under it
-			# This mirrors gitignore semantics where a pattern matches files and directories
-			if [[ "$path" == .opencode/${pref} || "$path" == .opencode/${pref}/* ]]; then
-				return 0
-			fi
-			# Also support wildcard patterns from gitignore (e.g. *.py, sub*/file)
-			if [[ "$pref" == *"*"* || "$pref" == *"?"* || "$pref" == *"["* ]]; then
-				if [[ "$path" == .opencode/${pref} || "$path" == .opencode/${pref}/* ]]; then
+		norm="$p"
+		# If pattern contains wildcards, match using shell pattern against the path
+		if [[ "$norm" == *"*"* || "$norm" == *"?"* || "$norm" == *"["* ]]; then
+			# prefix with .opencode/ if pattern is not anchored
+			if [[ "$norm" != /* ]]; then
+				if [[ "$path" == .opencode/${norm} || "$path" == .opencode/${norm}* ]]; then
+					return 0
+				fi
+			else
+				if [[ "$path" == $norm ]]; then
 					return 0
 				fi
 			fi
+			continue
 		fi
+
+		# Exact file match
+		if [[ "$path" == ".opencode/${norm}" ]]; then
+			return 0
+		fi
+		# If this pattern is known to be a directory ignore, match prefix
+		for d in "${IGNORE_DIRS[@]}"; do
+			if [[ "$path" == .opencode/${d}* ]]; then
+				return 0
+			fi
+		done
 	done
 	return 1
 }
@@ -265,7 +289,20 @@ done < <(
 	done
 	# prefer .opencode directory, fall back to legacy agents/
 	if [[ -d "${TARGET_DIR}/.opencode" ]]; then
-		find "${TARGET_DIR}/.opencode" -type f -print0
+		# Build find expression that prunes ignored directories so we don't traverse them
+		if [[ ${#IGNORE_DIRS[@]} -gt 0 ]]; then
+			# Construct -path ... -prune -o clauses
+			expr=()
+			for d in "${IGNORE_DIRS[@]}"; do
+				# escape for find: prefix path
+				expr+=(-path "${TARGET_DIR}/.opencode/${d}" -prune -o)
+			done
+			# final action: print files
+			# shellcheck disable=SC2086
+			find "${TARGET_DIR}/.opencode" ${expr[@]} -type f -print0
+		else
+			find "${TARGET_DIR}/.opencode" -type f -print0
+		fi
 	elif [[ -d "${TARGET_DIR}/agents" ]]; then
 		find "${TARGET_DIR}/agents" -type f -print0
 	fi
