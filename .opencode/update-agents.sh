@@ -200,16 +200,34 @@ if [[ -f "$GITIGNORE_FILE" ]]; then
 		IGNORE_PATTERNS+=("$norm")
 
 		# Determine if this pattern should be treated as a directory ignore.
-		# If pattern ends with a slash it's a dir; otherwise if the path exists
-		# locally under .opencode and is a directory treat it as a dir too.
-		if [[ "$norm" == */ ]]; then
-			d="${norm%/}"
-			IGNORE_DIRS+=("$d")
+		# We treat a pattern as a directory when any remote path (from
+		# discovery) starts with ".opencode/<pattern>/". Do NOT require a
+		# trailing slash in the .gitignore — plain names that refer to
+		# directories are treated as directories. Fall back to local check
+		# if no remote information is available.
+		p_no_slash="${norm%/}"
+		is_dir=1
+		# If we have agent file list, check if any remote path indicates a
+		# directory by having the pattern as a prefix.
+		if [[ ${#AGENT_FILES[@]} -gt 0 ]]; then
+			is_dir=0
+			for rf in "${AGENT_FILES[@]}"; do
+				if [[ "$rf" == .opencode/${p_no_slash}/* ]] || [[ "$rf" == .opencode/${p_no_slash} ]]; then
+					is_dir=1
+					break
+				fi
+			done
 		else
-			# If the exact path exists locally and is a directory, mark as dir
-			if [[ -d "${TARGET_DIR}/.opencode/${norm}" ]]; then
-				IGNORE_DIRS+=("$norm")
+			# fallback: check local filesystem
+			if [[ -d "${TARGET_DIR}/.opencode/${p_no_slash}" ]]; then
+				is_dir=1
+			else
+				is_dir=0
 			fi
+		fi
+
+		if [[ $is_dir -eq 1 ]]; then
+			IGNORE_DIRS+=("$p_no_slash")
 		fi
 	done <"$GITIGNORE_FILE"
 fi
