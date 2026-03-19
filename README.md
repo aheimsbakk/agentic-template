@@ -31,8 +31,8 @@ You have two primary ways to interact with the system, depending on what you nee
 **1. The Primaries (Your Chat Partners)**
 * 🧠 **Brainstorm:** Your creative sounding board. Talk to this agent when you want to explore new features, find logical flaws in your ideas, or discuss architecture. It won't write code; it will help you think.
 * 🐧 **Linux Expert:** Expert advisor for Linux internals, Python3, Bash scripting, and log analysis. No filesystem access—operates as a pure discussion partner for diagnosing complex issues and optimizing architectures.
-* 🤝 **Vibe:** Your interactive pair-programmer. Use this for quick, hands-on coding sessions where you want to work together step-by-step. 
-* 📋 **Plan:** The built-in planning agent for structuring broader goals.
+* 🤝 **Vibe:** Your interactive pair-programmer. Use this for quick, hands-on coding sessions where you want to work together step-by-step.
+* 🪞 **Reflect:** A Socratic thinking partner that surfaces hidden assumptions, reframes problems, and helps you reach clear decisions through structured reflection techniques. Read-only project context on request — otherwise pure dialogue.
 
 **2. The Factory (The Autonomous Subagents)**
 When you have a solid idea and want the system to build it autonomously, you hand it over to the Factory.
@@ -45,7 +45,7 @@ When you have a solid idea and want the system to build it autonomously, you han
 
 ## 🔄 How the Autonomous Pipeline Works
 
-When you have agreed on an idea with the **Brainstorm** or **Plan** agent, you trigger the autonomous pipeline by tagging the Project Manager (`@pm`). 
+When you have agreed on an idea with the **Brainstorm** agent, you trigger the autonomous pipeline by tagging the Project Manager (`@pm`). 
 
 Here is what happens behind the scenes while you sit back and watch:
 
@@ -53,7 +53,7 @@ Here is what happens behind the scenes while you sit back and watch:
 [ You ] 
    │
    ▼
-[ @brainstorm / @plan ] ──(Discuss ideas & finalize a Project Brief)
+[ @brainstorm ] ──(Discuss ideas & finalize a Project Brief)
    │
    ▼  Trigger: "@pm, build this brief ... a copy of the brief"
 ┌────────────────────────────────────────────────────────┐
@@ -95,7 +95,7 @@ Use this workflow when you want a feature built from start to finish with proper
 
 1. **Discuss:** Start a chat with `brainstorm`. Explain what you want to achieve.
 2. **Refine:** Answer Brainstorm's critical questions until the idea is solid.
-3. **Trigger:** Once Brainstorm generates a "Project Brief", simply tag `@pm` and tell it to execute the brief (e.g., *"@pm, please build the brief we just discussed"*).
+3. **Trigger:** Once Brainstorm generates a "Project Brief", tag `@pm` and tell it to execute the brief (e.g., *"@pm, please build the brief we just discussed"*).
 4. **Wait:** Do not interrupt the PM while it calls the Architect, Builder, and QA. 
 5. **Review:** When QA passes, the PM will give you a quick summary. 
 
@@ -118,5 +118,30 @@ The agents rely on a few critical markdown files to stay synchronized. The Archi
 * `CONTEXT.md`: A short summary of the project's current state.
 * `.opencode/RULES.md`: Absolute, unbreakable rules for the project.
 * `docs/PROJECT_RULES.md`: Dynamic coding conventions deduced by the Architect. 
+
+## 🔧 Scripts
+
+### `scripts/bump-version.sh`
+
+Bumps the semantic version stored in the `VERSION` file at the project root.
+
+**Usage:**
+```bash
+scripts/bump-version.sh [patch|minor|major]
+```
+
+**Arguments:**
+- `patch` — Bump patch version (0.0.x). Default if no argument given.
+- `minor` — Bump minor version (0.x.0).
+- `major` — Bump major version (x.0.0).
+
+**Examples:**
+```bash
+scripts/bump-version.sh patch   # 0.1.0 -> 0.1.1
+scripts/bump-version.sh minor   # 0.1.0 -> 0.2.0
+scripts/bump-version.sh major   # 0.1.0 -> 1.0.0
+```
+
+---
 
 Enjoy building with your new autonomous team!
