@@ -30,6 +30,7 @@ You have two primary ways to interact with the system, depending on what you nee
 
 **1. The Primaries (Your Chat Partners)**
 * 🧠 **Brainstorm:** Your creative sounding board. Talk to this agent when you want to explore new features, find logical flaws in your ideas, or discuss architecture. It won't write code; it will help you think.
+* 🐧 **Linux Expert:** Expert advisor for Linux internals, Python3, Bash scripting, and log analysis. No filesystem access—operates as a pure discussion partner for diagnosing complex issues and optimizing architectures.
 * 🤝 **Vibe:** Your interactive pair-programmer. Use this for quick, hands-on coding sessions where you want to work together step-by-step. 
 * 📋 **Plan:** The built-in planning agent for structuring broader goals.
 
