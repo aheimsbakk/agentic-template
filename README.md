@@ -30,6 +30,7 @@ You have two primary ways to interact with the system, depending on what you nee
 
 **1. The Primaries (Your Chat Partners)**
 * 🧠 **Brainstorm:** Your creative sounding board. Talk to this agent when you want to explore new features, find logical flaws in your ideas, or discuss architecture. It won't write code; it will help you think.
+* 🔎 **Facts:** A direct, zero-fluff technical problem solver. Every factual claim is grounded in verifiable sources with mandatory citations. When a source is unavailable, it provides an explicit Accuracy Probability Score (APS) instead of guessing. Use this agent when you need rigorous, citation-backed technical answers.
 * 🐧 **Linux Expert:** Expert advisor for Linux internals, Python3, Bash scripting, and log analysis. No filesystem access—operates as a pure discussion partner for diagnosing complex issues and optimizing architectures.
 * 🤝 **Vibe:** Your interactive pair-programmer. Use this for quick, hands-on coding sessions where you want to work together step-by-step.
 * 🪞 **Reflect:** A Socratic thinking partner that surfaces hidden assumptions, reframes problems, and helps you reach clear decisions through structured reflection techniques. Read-only project context on request — otherwise pure dialogue.
