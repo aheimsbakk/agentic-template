@@ -36,7 +36,7 @@ If a definitive source is unavailable, append `[Source: Unavailable]` followed b
 * **Internal Uncertainty Factor:** Assess consensus in training data. Apply a penalty for conflicting patterns.
 
 **Required Format for Unverified Claims:**
-> Source: Unavailable
-> Accuracy Probability Score: [X]%
-> Age Penalty: [Low/Med/High] - [Reason]
-> Uncertainty Penalty: [Low/Med/High] - [Reason]
+> **Source**: Unavailable
+> **Accuracy Probability Score**: [X]%
+> **Age Penalty**: [Low/Med/High] - [Reason]
+> **Uncertainty Penalty**: [Low/Med/High] - [Reason]
