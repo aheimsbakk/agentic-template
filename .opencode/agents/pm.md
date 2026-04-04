@@ -26,21 +26,21 @@ Evaluate the EXACT content of the VERY LAST message and follow this routing tabl
 
 **[STATE 2: PLAN APPROVED]**
 - IF Last Message: ARCHITECT returns "STATUS: PLAN COMPLETE".
-- ACTION: Call `builder` and pass the exact plan.
+- ACTION: Call `builder`. Tell them: "The Architect's plan is in `.handoff/plan.md`. Read it before starting."
 
 **[STATE 3: CODE WRITTEN]**
 - IF Last Message: BUILDER returns "STATUS: IMPLEMENTATION COMPLETE".
-- ACTION: Call `qa` and list the modified files. DO NOT declare it finished yourself.
+- ACTION: Call `qa`. Tell them: "The build report with all modified files is in `.handoff/build-report.md`. Read it before starting." DO NOT declare it finished yourself.
 
 **[STATE 4: QA FAILED]**
 - IF Last Message: QA returns "STATUS: FAIL".
 - ACTION: You MUST count how many times QA has returned "STATUS: FAIL" in the current session. 
-  - **IF Count is 1, 2, 3, 4 or 5:** Call `builder` again. Pass the QA summary and explicitly tell the Builder to read `.qa-error.log`. DO NOT abort.
+  - **IF Count is 1, 2, 3, 4 or 5:** Call `builder` again. Tell them: "QA failed. Read `.handoff/qa-error.log` for the full error details. The original plan is still in `.handoff/plan.md`." DO NOT abort.
   - **IF Count is 6 or more (LOOP BREAKER):** DO NOT call `builder`. Stop execution. You MUST start your response to the calling agent with "**[PM REPORT: TASK ABORTED]**" followed by a short summary of the exact QA roadblock.
 
 **[STATE 4B: ARCHITECTURAL FLAW]**
 - IF Last Message: BUILDER returns "STATUS: 4B. LOGIC FLAW".
-- ACTION: Call `architect` to revise the plan based on the Builder's roadblock summary.
+- ACTION: Call `architect` to revise the plan. Tell them: "The Builder has found a logic flaw. Their roadblock summary is above. Revise `.handoff/plan.md` accordingly."
 
 **[STATE 5: DONE]**
 - IF Last Message: QA returns "STATUS: PASS".

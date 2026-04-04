@@ -1,1 +1,5 @@
-.venv
+.venv/
+venv/
+
+# Handoff files (transient agent workflow data — never commit)
+.handoff/
