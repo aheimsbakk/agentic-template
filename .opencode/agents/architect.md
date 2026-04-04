@@ -3,7 +3,7 @@ description: System Architect responsible for planning, API research, and bluepr
 mode: subagent
 temperature: 0.4
 tools:
-  bash: false
+  bash: true
   task: false
   question: false
   external_directory: false
