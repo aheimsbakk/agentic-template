@@ -36,8 +36,7 @@ You have two primary ways to interact with the system, depending on what you nee
 * 🪞 **Reflect:** A Socratic thinking partner that surfaces hidden assumptions, reframes problems, and helps you reach clear decisions through structured reflection techniques. Read-only project context on request — otherwise pure dialogue.
 
 **2. The Factory (The Autonomous Subagents)**
-When you have a solid idea and want the system to build it autonomously, you hand it over to the Factory.
-* 👔 **PM (`@pm`):** The Project Manager. You give it a task, and it orchestrates the rest of the team. It does not write code—it routes tasks.
+When you have a solid idea and want the system to build it autonomously, you trigger the Factory with the `/pm` command. The current agent loads the `pm` skill and takes on the Project Manager role, orchestrating the rest of the team.
 * 📐 **Architect (`@architect`):** Plans the file structure and updates the system blueprints.
 * 👷 **Builder (`@builder`):** Writes the actual code and features.
 * 🕵️ **QA (`@qa`):** Tests the code, reads error logs, and performs the final Git commit.
@@ -46,7 +45,7 @@ When you have a solid idea and want the system to build it autonomously, you han
 
 ## 🔄 How the Autonomous Pipeline Works
 
-When you have agreed on an idea with the **Brainstorm** agent, you trigger the autonomous pipeline by tagging the Project Manager (`@pm`). 
+When you have agreed on an idea with the **Brainstorm** agent, you trigger the autonomous pipeline with the `/pm` command. This loads the `pm` skill into the current agent, which then takes on the Project Manager role and orchestrates the Factory.
 
 Here is what happens behind the scenes while you sit back and watch:
 
@@ -56,10 +55,10 @@ Here is what happens behind the scenes while you sit back and watch:
    ▼
 [ @brainstorm ] ──(Discuss ideas & finalize a Project Brief)
    │
-   ▼  Trigger: "@pm, build this brief ... a copy of the brief"
+   ▼  Trigger: "/pm <your request or brief>"
 ┌────────────────────────────────────────────────────────┐
-│ 👔 PROJECT MANAGER (@pm)                               │
-│ (The Orchestrator. Routes tasks, never writes code)    │
+│ 🧠 CURRENT AGENT + pm SKILL                            │
+│ (Loads PM orchestration. Routes tasks, never writes)   │
 └─────────┬──────────────────────────────────────────────┘
           │
   1. Plan │
@@ -96,11 +95,11 @@ Use this workflow when you want a feature built from start to finish with proper
 
 1. **Discuss:** Start a chat with `brainstorm`. Explain what you want to achieve.
 2. **Refine:** Answer Brainstorm's critical questions until the idea is solid.
-3. **Trigger:** Once Brainstorm generates a "Project Brief", tag `@pm` and tell it to execute the brief (e.g., *"@pm, please build the brief we just discussed"*).
-4. **Wait:** Do not interrupt the PM while it calls the Architect, Builder, and QA. 
+3. **Trigger:** Once Brainstorm generates a "Project Brief", run `/pm` with the brief (e.g., *"/pm build the feature we just discussed: [paste brief here]"*).
+4. **Wait:** Do not interrupt the pipeline while it calls the Architect, Builder, and QA. 
 5. **Review:** When QA passes, the PM will give you a quick summary. 
 
-*💡 Pro-Tip: To keep the AI's memory sharp, it's highly recommended to start a **New Chat** for each new major feature before calling `@pm`.*
+*💡 Pro-Tip: To keep the AI's memory sharp, it's highly recommended to start a **New Chat** for each new major feature before running `/pm`.*
 
 ### Workflow B: Vibe Mode (Recommended for quick fixes)
 Use this workflow when you want to quickly debug an issue or write code collaboratively without the heavy process.
