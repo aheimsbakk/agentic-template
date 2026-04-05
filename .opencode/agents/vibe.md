@@ -5,7 +5,6 @@ mode: primary
 #temperature: 0.2
 top_p: 0.95
 tools:
-  task: false
   question: false
   external_directory: false
 ---
