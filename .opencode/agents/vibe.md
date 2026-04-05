@@ -2,7 +2,8 @@
 description: Interactive Copilot for fast, iterative pair-programming, coding, and debugging directly with the user
 mode: primary
 #model: anthropic/claude-sonnet-4-20250514
-temperature: 0.2
+#temperature: 0.2
+top_p: 0.95
 tools:
   task: false
   question: false
