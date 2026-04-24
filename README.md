@@ -1,8 +1,6 @@
 # 🚀 OpenCode Multi-Agent Workflow
 
-Welcome to your autonomous AI development team. Instead of relying on a single AI to do everything, this setup provides you with a team of specialized agents. Each agent has a specific job—from brainstorming ideas to writing code and running tests. 
-
-This template is designed to keep your project organized, your architecture clean, and your codebase bug-free.
+This template gives you a team of specialized AI agents, each with a distinct role: brainstorming, planning, writing code, and running tests. Agents hand off work to each other so each task is handled by the right tool.
 
 ## ⬇️ Quick Install
 
@@ -30,7 +28,7 @@ You have two primary ways to interact with the system, depending on what you nee
 
 **1. The Primaries (Your Chat Partners)**
 * 🧠 **Brainstorm:** Your creative sounding board. Talk to this agent when you want to explore new features, find logical flaws in your ideas, or discuss architecture. It won't write code; it will help you think.
-* 🔎 **Facts:** A direct, zero-fluff technical problem solver. Every factual claim is grounded in verifiable sources with mandatory citations. When a source is unavailable, it provides an explicit Accuracy Probability Score (APS) instead of guessing. Use this agent when you need rigorous, citation-backed technical answers.
+* 🔎 **Facts:** A technical problem solver that grounds every claim in a verifiable source with a citation. When a source is unavailable, it gives an explicit Accuracy Probability Score (APS) rather than guessing. Use this agent when you need citation-backed technical answers.
 * 🐧 **Linux Expert:** Expert advisor for Linux internals, Python3, Bash scripting, and log analysis. No filesystem access—operates as a pure discussion partner for diagnosing complex issues and optimizing architectures.
 * 🤝 **Vibe:** Your interactive pair-programmer. Use this for quick, hands-on coding sessions where you want to work together step-by-step.
 * 🪞 **Reflect:** A Socratic thinking partner that surfaces hidden assumptions, reframes problems, and helps you reach clear decisions through structured reflection techniques. Read-only project context on request — otherwise pure dialogue.
@@ -83,7 +81,7 @@ Here is what happens behind the scenes while you sit back and watch:
 1. **Plan:** PM asks the Architect to figure out *how* to build your idea.
 2. **Build:** PM passes the Architect's plan to the Builder, who writes the code.
 3. **Test:** PM asks QA to test the Builder's code.
-4. **Fix (If needed):** If QA finds an error, PM sends the error log back to the Builder to fix it. This loops until the tests pass (max 3 times).
+4. **Fix (If needed):** If QA finds an error, PM sends the error log back to the Builder to fix it. This repeats up to 3 times until the tests pass.
 5. **Logic Flaw:** If the Builder encounters impossible logic, the PM sends the task back to the Architect to revise the plan.
 6. **Finish:** Once QA approves, the code is committed, and PM gives you a short summary of the result.
 
@@ -92,7 +90,7 @@ Here is what happens behind the scenes while you sit back and watch:
 ## 🛠️ How to Use the System
 
 ### Workflow A: The Autonomous Factory (Recommended for new features)
-Use this workflow when you want a feature built from start to finish with proper testing and documentation.
+Use this workflow when you want a feature built end-to-end with testing and documentation.
 
 1. **Discuss:** Start a chat with `brainstorm`. Explain what you want to achieve.
 2. **Refine:** Answer Brainstorm's critical questions until the idea is solid.
@@ -100,7 +98,7 @@ Use this workflow when you want a feature built from start to finish with proper
 4. **Wait:** Do not interrupt the PM while it calls the Architect, Builder, and QA. 
 5. **Review:** When QA passes, the PM will give you a quick summary. 
 
-*💡 Pro-Tip: To keep the AI's memory sharp, it's highly recommended to start a **New Chat** for each new major feature before calling `@pm`.*
+*💡 Tip: Start a **new chat** for each major feature before calling `@pm`. This keeps the conversation context focused and prevents earlier instructions from interfering.*
 
 ### Workflow B: Vibe Mode (Recommended for quick fixes)
 Use this workflow when you want to quickly debug an issue or write code collaboratively without the heavy process.
@@ -144,5 +142,3 @@ scripts/bump-version.sh major   # 0.1.0 -> 1.0.0
 ```
 
 ---
-
-Enjoy building with your new autonomous team!
